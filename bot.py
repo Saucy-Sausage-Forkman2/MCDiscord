@@ -251,7 +251,7 @@ async def supervisorLoop():
             for i in data:
                 ping = await minecraftPing()
                 dontcrash = await client.fetch_channel(f'{i}')
-                print(f'Updating supervisor in {dontcrash}')
+                #print(f'Updating supervisor in {dontcrash}')
                 dontcrash = await dontcrash.fetch_message(data[f'{i}'])
                 dontcrash = await dontcrash.edit(content=None, embed=ping)
             #try:
