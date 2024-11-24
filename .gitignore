@@ -1,6 +1,2 @@
-
-token.env
 .env
-*.json
-status_messages.json
 *.json
