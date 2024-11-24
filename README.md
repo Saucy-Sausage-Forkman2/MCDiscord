@@ -1,1 +1,1 @@
-A basic discord bot that queries the status of my minecraft server and edits a discord message every 60 seconds with the server's current status. Built using discord.py, mcstatus to actually get the server's information, asyncio, json to store the message id to edit on a one message per channel basis, and datetime to generate timestamps (unfortunately in my time zone, I don't think you can use the fancy discord timestamp markdown in embeds).
+A basic discord bot that queries the status of my home server. Built using discord.py, mcstatus, PalworldAPI, asyncio, and json.
