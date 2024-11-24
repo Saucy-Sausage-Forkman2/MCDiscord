@@ -195,7 +195,7 @@ async def palworldPing():
     aliveColor = discord.Colour.blue()
     deadColor = discord.Colour.dark_red()
     username = "admin"
-    password = "Daddy"
+    password = os.getenv("PALWORLD")
     api = PalworldAPI("http://"+address+":"+palworldRESTPort, username, password)
 
     server_info = await api.get_server_info() #dictionary, not json
@@ -258,7 +258,6 @@ async def palworldPing():
 
 @client.event
 async def on_ready():
-    await palworldPing()
     print(f'Logged in as {client.user}')
     await supervisorLoop()
 
@@ -282,6 +281,7 @@ async def on_message(message):
                 match(arguments[0]):
                     case "supervisor":
                         with open("status_messages.json","r+") as json_file:
+                            #saving the message sent as a variable since I was trying to edit my own message that I sent to command the bot before :/
                             pendingMessage = await message.channel.send("Pinging...")
                             data = json.load(json_file)
                             try:
@@ -305,6 +305,8 @@ async def on_message(message):
                             except:
                                 pass
                             else:
+                                #The strategy of using seek(0) to overwrite a file only works if the new text is equally long or longer than what already exists, otherwise
+                                #the difference will be appended to the end of the file. The solution is to truncate it from the begginning, effectively erasing it.
                                 json_file.seek(0)
                                 json_file.truncate()
                                 json.dump(data, json_file, indent=4)
