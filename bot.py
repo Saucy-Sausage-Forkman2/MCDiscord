@@ -7,11 +7,16 @@ import asyncio
 import json
 import datetime
 from dotenv import load_dotenv
+import asyncio
+from palworld_api import PalworldAPI
 
 address="192.168.254.11"
 publicAddress="beangod.duckdns.org"
 javaPort="26003"
 bedrockPort="19132"
+palworldRESTPort="8212"
+palworldPort="8212"
+
 load_dotenv()
 #loads environment variables from the .env file to hide them from public code
 #FILE MUST BE NAMED ".env"
@@ -21,10 +26,48 @@ prefix = '.'
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
-#functions moved up for my own convenience:
+#minecraft-specific funcionts
 
+def time():
+    current_time = datetime.datetime.now()
+    hour = current_time.hour
+    minute = current_time.minute
+    pm = ' AM'
+    if hour >= 12:
+        pm = " PM"
+    if hour > 13:
+        hour -= 12
+    if minute < 10:
+        minute = "0" + str(minute)
 
-async def formatResponse(java, bedrock):
+    return f"{hour}" + ":"+ f"{minute}" + f"{pm}"+ "  PST"
+
+async def minecraftPing():
+    javaStatus = ""
+    bedrockStatus = ""
+
+    #Java Status Request
+    try:
+        #ping the server ip
+        javaStatus = await JavaServer.async_lookup(address+":"+javaPort)
+        javaStatus = await javaStatus.async_status()
+    except:
+        #if there is any response other than OK, assume the server is down and request such an embed.
+        javaStatus = 0
+
+    #----
+
+    #Bedrock Status Request
+    try:
+        bedrockStatus = BedrockServer.lookup(address+":"+bedrockPort)
+        bedrockStatus = await bedrockStatus.async_status()
+    except:
+        bedrockStatus = 0
+    #---
+
+    return await formatMinecraftResponse(javaStatus,bedrockStatus)
+
+async def formatMinecraftResponse(java, bedrock):
     zeroServerColor = discord.Colour.red()
     oneServerColor = discord.Colour.yellow()
     twoServerColor = discord.Colour.green()
@@ -33,16 +76,6 @@ async def formatResponse(java, bedrock):
     onlyJavaTitle = "Java is Online"
     onlyBedrockTitle = "Bedrock is Online"
     bothOfflineTitle = "Server is Offline"
-
-    current_time = datetime.datetime.now()
-    hour = current_time.hour
-    minute = current_time.minute
-    pm = 'AM'
-    if hour >= 12:
-        pm = "PM"
-    if hour > 13:
-        hour -= 12
-
 
     embed = 0# if embed is not defined outside of the else if chain, it cannot be accessed by anything outside of the chain.
     #So I define it here.
@@ -78,7 +111,7 @@ async def formatResponse(java, bedrock):
         )
 
     
-        embed.set_footer(text=f"{hour}" + ":"+ f"{minute}" + f"{pm}"+ " PST")
+        embed.set_footer(text=time())
 
         #We can take a shortcut here since there is no other data to add
         embed.add_field(name="Java", value="Offline")
@@ -94,7 +127,7 @@ async def formatResponse(java, bedrock):
 
     #---------------------------------
     
-    embed.set_footer(text=f"{hour}" + ":"+ f"{minute}" + f"{pm}"+ " PST")
+    embed.set_footer(text=time())
 
     #if java is online
     if java != 0:
@@ -112,12 +145,14 @@ async def formatResponse(java, bedrock):
             formattedUsernames = ""
             for i in javaPlayerList:
                 formattedUsernames += " " + i.name + "\n"
-            embed.add_field(name="", value=formattedUsernames,inline=False)
-        else: embed.add_field(name="",value="",inline=False) # a new line to separate the player fields so it looks nice
+            embed.add_field(name="", value=formattedUsernames,inline=True)
+        else: embed.add_field(name="",value="",inline=True) # a new line to separate the player fields so it looks nice
         
+        embed.add_field(name="", value="",inline=False)
+
         #I placed the player count before the Java server header as it applies to both java and bedrock, and it feels wrong to have the
         #player count only under one or under both. And it has to be exist.
-        embed.add_field(name="Java", value="")
+        embed.add_field(name="Java", value="",inline=True)
         #Putting the game version first as it's the most important for new players, and is important in general
         embed.add_field(name="", value=f"{version}")
         #embed.add_field(name="Ping", value=f"{ping}" + "ms")
@@ -152,9 +187,78 @@ client = discord.Client(intents=intents)
 #-------------------------------------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------------------------------------
+#Palworld-Specific Functions
+
+async def palworldPing():
+    
+    palworldTitle = "Palworld: Appraisal of the Tower"
+    aliveColor = discord.Colour.blue()
+    deadColor = discord.Colour.dark_red()
+    username = "admin"
+    password = "Daddy"
+    api = PalworldAPI("http://"+address+":"+palworldRESTPort, username, password)
+
+    server_info = await api.get_server_info() #dictionary, not json
+    
+    #print(server_info)
+    #print(palworldSettings)
+
+    try:   
+        #If the palworld server is down, the library will return a dictionary with the single entry of 'error'. In this case, we check to see if the dictionary contains
+        # any key for error. If it does, that means the server is inaccessible.abs
+        # However, in that case, there would be no exception. So the code looks a little funny, if not messy. But that's the price to pay for my approach.
+        server_info['error']
+
+    except:
+        #this runs if there is no error, both in connecting to the server and in the dictionary returned by the library.
+        palworldPlayers = await api.get_player_list()# print all names in array again
+        palworldPlayers = palworldPlayers["players"]
+        palworldSettings = await api.get_server_settings()
+        palworldSettings = json.loads(palworldSettings)
+
+        version = server_info['version']
+        myDescription=server_info['servername']
+        maxPlayers = palworldSettings["ServerPlayerMaxNum"]
+        playerCount = len(palworldPlayers)
+        
+        embed = discord.Embed(
+        title=palworldTitle,
+        color=aliveColor,
+        description=myDescription
+        )
+
+        embed.set_footer(text=time())
+
+        embed.add_field(name="Version",value="",inline=True) 
+        embed.add_field(name="",value=f"{version}",inline=True) 
+        embed.add_field(name="",value="",inline=False) 
+        embed.add_field(name="Players", value=f"{playerCount}" + "/" + f"{maxPlayers}",inline=True)
+
+        formattedUsernames = ""
+        for i in palworldPlayers:
+            formattedUsernames += " " + i['name'] + "\n"
+        embed.add_field(name="", value=formattedUsernames,inline=True)
+        embed.add_field(name="",value=publicAddress+":"+palworldPort,inline=False)
+
+    else:
+        embed = discord.Embed(
+        title=palworldTitle,
+        color=deadColor,
+        description="The Server is Offline."
+        )
+
+        embed.set_footer(text=time())
+
+    return embed
+   
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------------------------
 
 @client.event
 async def on_ready():
+    await palworldPing()
     print(f'Logged in as {client.user}')
     await supervisorLoop()
 
@@ -169,9 +273,9 @@ async def on_message(message):
         match command:
             case "ping":
                 pendingMessage = await message.channel.send("Pinging...")
-                status = await minecraftPing()
+                status = await pingAll()
 
-                await pendingMessage.edit(content=None,embed=status) 
+                await pendingMessage.edit(content=None,embeds=status) 
                 #using local ip address since bot will be run from within the 
                 #same network as the minecraft server itself
             case "create":
@@ -187,7 +291,7 @@ async def on_message(message):
                             finally:
                                 json_file.seek(0)
                                 json.dump(data, json_file, indent=4)
-                            await pendingMessage.edit(content=None,embed=(await minecraftPing()))
+                            await pendingMessage.edit(content=None,embeds=(await pingAll()))
 
                     case _:
                         await message.channel.send(embed=help())
@@ -197,16 +301,24 @@ async def on_message(message):
                         with open("status_messages.json","r+") as json_file:
                             data = json.load(json_file)
                             try:
-                                if data[f"{message.channel.id}"] != null: data["servers"][message.channel.id] = null
+                                if data[f"{message.channel.id}"] != "kitty": data[f'{message.channel.id}'] = "kitty"
                             except:
                                 pass
-                        message.channel.send("Supervisor disabled.")
+                            else:
+                                json_file.seek(0)
+                                json_file.truncate()
+                                json.dump(data, json_file, indent=4)
+                                
+                            finally:
+                                await message.channel.send("Supervisor disabled.")
                     case _:
                         await message.channel.send(embed=help())
             case _:
                 await message.channel.send(embed=help())
                 
-
+async def pingAll():
+    return [await minecraftPing(), await palworldPing()]
+            
 def help():
     embed = discord.Embed(
         title="Help",
@@ -217,31 +329,6 @@ def help():
     embed.add_field(name=".disable supervisor", value="Disables the bot from editing the message with the server's status")
 
     return embed
-
-async def minecraftPing():
-    javaStatus = ""
-    bedrockStatus = ""
-
-    #Java Status Request
-    try:
-        #ping the server ip
-        javaStatus = await JavaServer.async_lookup(address+":"+javaPort)
-        javaStatus = await javaStatus.async_status()
-    except:
-        #if there is any response other than OK, assume the server is down and request such an embed.
-        javaStatus = 0
-
-    #----
-
-    #Bedrock Status Request
-    try:
-        bedrockStatus = BedrockServer.lookup(address+":"+bedrockPort)
-        bedrockStatus = await bedrockStatus.async_status()
-    except:
-        bedrockStatus = 0
-    #---
-
-    return await formatResponse(javaStatus,bedrockStatus)
         
 async def supervisorLoop():
     delayInSeconds = 60
@@ -249,13 +336,14 @@ async def supervisorLoop():
         with open("status_messages.json","r+") as json_file:
             data = json.load(json_file)
             for i in data:
-                ping = await minecraftPing()
+                if data[f'{i}'] == "kitty": continue
+                ping = await pingAll()
                 dontcrash = await client.fetch_channel(f'{i}')
                 #print(f'Updating supervisor in {dontcrash}')
                 dontcrash = await dontcrash.fetch_message(data[f'{i}'])
-                dontcrash = await dontcrash.edit(content=None, embed=ping)
+                dontcrash = await dontcrash.edit(content=None, embeds=ping)
             #try:
-            #    if data[f"{message.channel.id}"] != null: data["servers"][message.channel.id] = null
+            #    if data[f"{message.channel.id}"] != None: data["servers"][message.channel.id] = None
             #except:
             #    pass
         await asyncio.sleep(delayInSeconds)
