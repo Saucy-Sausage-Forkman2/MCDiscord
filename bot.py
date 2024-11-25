@@ -41,7 +41,8 @@ def time():
         minute = "0" + str(minute)
 
     return f"{hour}" 
-    + ":"+ f"{minute}" 
+    + ":"
+    + f"{minute}" 
     + f"{pm}"
     + "  PST"
 
@@ -220,14 +221,14 @@ async def palworldPing():
         palworldSettings = json.loads(palworldSettings)
 
         version = server_info['version']
-        myDescription=server_info['servername']
+        #myDescription=server_info['servername']
         maxPlayers = palworldSettings["ServerPlayerMaxNum"]
         playerCount = len(palworldPlayers)
         
         embed = discord.Embed(
         title=palworldTitle,
         color=aliveColor,
-        description=myDescription
+        #description=myDescription
         )
 
         embed.set_footer(text=time())
