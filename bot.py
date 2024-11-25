@@ -339,7 +339,7 @@ def help():
     return embed
         
 async def supervisorLoop():
-    delayInSeconds = 10
+    delayInSeconds = 60
     while True:
         with open("status_messages.json","r+") as json_file:
             data = json.load(json_file)
