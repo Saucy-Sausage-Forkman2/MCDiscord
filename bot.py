@@ -40,7 +40,10 @@ def time():
     if minute < 10:
         minute = "0" + str(minute)
 
-    return f"{hour}" + ":"+ f"{minute}" + f"{pm}"+ "  PST"
+    return f"{hour}" 
+    + ":"+ f"{minute}" 
+    + f"{pm}"
+    + "  PST"
 
 async def minecraftPing():
     javaStatus = ""
@@ -277,8 +280,10 @@ async def on_message(message):
                 await pendingMessage.edit(content=None,embeds=status) 
                 #using local ip address since bot will be run from within the 
                 #same network as the minecraft server itself
+                
             case "create":
                 match(arguments[0]):
+
                     case "supervisor":
                         with open("status_messages.json","r+") as json_file:
                             #saving the message sent as a variable since I was trying to edit my own message that I sent to command the bot before :/
@@ -295,8 +300,10 @@ async def on_message(message):
 
                     case _:
                         await message.channel.send(embed=help())
+
             case "disable":
                 match(arguments[0]):
+
                     case "supervisor":
                         with open("status_messages.json","r+") as json_file:
                             data = json.load(json_file)
@@ -313,8 +320,10 @@ async def on_message(message):
                                 
                             finally:
                                 await message.channel.send("Supervisor disabled.")
+
                     case _:
                         await message.channel.send(embed=help())
+
             case _:
                 await message.channel.send(embed=help())
                 
@@ -333,7 +342,7 @@ def help():
     return embed
         
 async def supervisorLoop():
-    delayInSeconds = 60
+    delayInSeconds = 10
     while True:
         with open("status_messages.json","r+") as json_file:
             data = json.load(json_file)
