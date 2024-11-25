@@ -72,10 +72,10 @@ async def formatMinecraftResponse(java, bedrock):
     oneServerColor = discord.Colour.yellow()
     twoServerColor = discord.Colour.green()
 
-    bothOnlineTitle = "Minecraft Server is Online"
-    onlyJavaTitle = "Java is Online"
-    onlyBedrockTitle = "Bedrock is Online"
-    bothOfflineTitle = "Server is Offline"
+    bothOnlineTitle = "Diesel Nation"
+    onlyJavaTitle = "Diesel Nation: Bedrock Unreachable"
+    onlyBedrockTitle = "Diesel Nation: Java Unreachable"
+    bothOfflineTitle = "Diesel Nation is Offline"
 
     embed = 0# if embed is not defined outside of the else if chain, it cannot be accessed by anything outside of the chain.
     #So I define it here.
