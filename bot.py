@@ -40,11 +40,7 @@ def time():
     if minute < 10:
         minute = "0" + str(minute)
 
-    return f"{hour}" 
-    + ":"
-    + f"{minute}" 
-    + f"{pm}"
-    + "  PST"
+    return f"{hour}" + ":" + f"{minute}"  + f"{pm}" + "  PST"
 
 async def minecraftPing():
     javaStatus = ""
