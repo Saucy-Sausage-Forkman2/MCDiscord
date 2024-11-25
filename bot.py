@@ -263,7 +263,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.content.startswith(prefix) and message.author != client.user:
+    if message.content.startswith(prefix) and message.author != client.user and message.author.guild_permissions.administrator:
         arguments = message.content[1:].split(" ")
         command = arguments.pop(0)
         if len(arguments) > 0:
