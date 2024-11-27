@@ -12,10 +12,15 @@ from palworld_api import PalworldAPI
 
 address="192.168.254.11"
 publicAddress="beangod.duckdns.org"
+
 javaPort="26003"
 bedrockPort="19132"
 palworldRESTPort="8212"
-palworldPort="8212"
+palworldPort="8211"
+
+palworldAddress=publicAddress+":"+palWorldPort+" (password protected)"
+javaAddress=publicAddress+":"+javaPort+" (whitelisted)"
+bedrockAddress=publicAddress+":"+bedrockPort+" (whitelisted)"
 
 load_dotenv()
 #loads environment variables from the .env file to hide them from public code
@@ -119,12 +124,10 @@ async def formatMinecraftResponse(java, bedrock):
 
         #We can take a shortcut here since there is no other data to add
         embed.add_field(name="Java", value="Offline")
-        embed.add_field(name="",value=publicAddress+":"+javaPort,inline=False)
 
         embed.add_field(name="",value="",inline=False) # a new line to separate the player fields so it looks nice
 
         embed.add_field(name="Bedrock", value="Offline")
-        embed.add_field(name="",value=publicAddress+":"+bedrockPort,inline=False)
 
         return embed
             
@@ -161,10 +164,9 @@ async def formatMinecraftResponse(java, bedrock):
         embed.add_field(name="", value=f"{version}")
         #embed.add_field(name="Ping", value=f"{ping}" + "ms")
         #The java server has more details since both servers run hand in hand, so having all information about both is simply redundant.
-        embed.add_field(name="",value=publicAddress+":"+javaPort,inline=False)
+        embed.add_field(name="",value=javaAddress,inline=False)
     else:
         embed.add_field(name="",value="Server Offline")
-        embed.add_field(name="",value=publicAddress+":"+javaPort,inline=False)
     
     embed.add_field(name="",value="",inline=False) # a new line to separate the player fields so it looks nice
 
@@ -175,10 +177,9 @@ async def formatMinecraftResponse(java, bedrock):
         version = bedrock.version.name
         embed.add_field(name="  ", value=f"{version}")
         #embed.add_field(name="Ping", value=f"{ping}" + "ms")
-        embed.add_field(name="",value=publicAddress+":"+bedrockPort,inline=False)
+        embed.add_field(name="",value=bedrockAddress,inline=False)
     else:
         embed.add_field(name="Bedrock",value="Server Offline")
-        embed.add_field(name="",value=publicAddress+":"+bedrockPort,inline=False)
     return embed
 
 #----------------------------------------
@@ -242,7 +243,7 @@ async def palworldPing():
         for i in palworldPlayers:
             formattedUsernames += " " + i['name'] + "\n"
         embed.add_field(name="", value=formattedUsernames,inline=True)
-        embed.add_field(name="",value=publicAddress+":"+palworldPort,inline=False)
+        embed.add_field(name="",value=palworldAddress,inline=False)
 
     else:
         embed = discord.Embed(
