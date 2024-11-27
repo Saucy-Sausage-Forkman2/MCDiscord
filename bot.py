@@ -18,7 +18,7 @@ bedrockPort="19132"
 palworldRESTPort="8212"
 palworldPort="8211"
 
-palworldAddress=publicAddress+":"+palWorldPort+" (password protected)"
+palworldAddress=publicAddress+":"+palworldPort+" (password protected)"
 javaAddress=publicAddress+":"+javaPort+" (whitelisted)"
 bedrockAddress=publicAddress+":"+bedrockPort+" (whitelisted)"
 
